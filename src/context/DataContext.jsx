@@ -131,7 +131,7 @@ export const DataProvider = ({ children }) => {
       };
     } else {
       // Local Storage Fallback Mode: Seed data if empty or outdated
-      const SEED_VERSION = "v2";
+      const SEED_VERSION = "v3";
       if (localStorage.getItem("mock_seed_version") !== SEED_VERSION) {
         localStorage.setItem("mock_activities", JSON.stringify(MOCK_ACTIVITIES));
         localStorage.setItem("mock_projects", JSON.stringify(MOCK_PROJECTS));

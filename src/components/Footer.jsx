@@ -96,11 +96,6 @@ const Footer = () => {
               <span className="footer-contact-icon">✉️</span>
               <span>{SITE_INFO.email}</span>
             </div>
-            {SITE_INFO.contacts && SITE_INFO.contacts.map((c, idx) => (
-              <div key={idx} className="footer-contact-item" style={{ paddingLeft: "1.5rem", fontSize: "0.85rem", color: "rgba(255, 255, 255, 0.6)" }}>
-                <span>👤 {c.name}</span>
-              </div>
-            ))}
           </div>
         </div>
 

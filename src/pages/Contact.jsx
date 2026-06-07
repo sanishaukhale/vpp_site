@@ -131,22 +131,6 @@ const Contact = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Individual Contacts list */}
-              {SITE_INFO.contacts && (
-                <div style={{ marginTop: "var(--sp-8)" }}>
-                  <h3 className="font-playfair" style={{ fontSize: "1.25rem", color: "var(--color-secondary)", fontWeight: "700", marginBottom: "var(--sp-4)" }}>
-                    Direct Contacts
-                  </h3>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    {SITE_INFO.contacts.map((c, idx) => (
-                      <p key={idx} style={{ color: "var(--color-text-light)", margin: 0 }}>
-                        <strong>{c.name}:</strong> {c.phone}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Contact Form Column */}

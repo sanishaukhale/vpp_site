@@ -8,10 +8,7 @@ export const SITE_INFO = {
   phone:       '8805144565 / 9284924032',
   email:       'vivekanandprernases@gmail.com',
   
-  contacts: [
-    { name: 'Prof. Pournima Kerkar (President)', phone: '8805144565' },
-    { name: 'Shubhada Chari (Secretary)', phone: '9284924032' },
-  ],
+  contacts: [],
 
   bankDetails: {
     payeeName:     'Vivekananda Prerana Social and Educational Society',
