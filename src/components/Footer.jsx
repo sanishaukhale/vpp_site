@@ -16,7 +16,16 @@ const Footer = () => {
               <img 
                 src="/logo.png" 
                 alt="Swami Vivekananda Logo" 
-                style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} 
+                style={{ 
+                  width: "50px", 
+                  height: "50px", 
+                  borderRadius: "50%", 
+                  objectFit: "cover", 
+                  flexShrink: 0,
+                  border: "2px solid #fff",
+                  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+                  backgroundColor: "#fff"
+                }} 
               />
               <span className="footer-logo-name">{SITE_INFO.name}</span>
             </Link>

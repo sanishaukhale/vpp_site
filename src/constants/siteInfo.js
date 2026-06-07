@@ -1,6 +1,6 @@
 export const SITE_INFO = {
   name:        'Vivekanand Prerna Social and Educational Society',
-  shortName:   'VPS',
+  shortName:   'VPSES Goa',
   tagline:     'Empowering Lives Through Education, Rehabilitation & Social Welfare',
   description: 'Vivekanand Prerna Social and Educational Society is an NGO in Goa dedicated to education, rehabilitation, disability welfare, women empowerment, and social welfare, inspired by Swami Vivekananda.',
   regNo:       '243/GOA/2019',

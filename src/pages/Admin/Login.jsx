@@ -60,11 +60,14 @@ const Login = () => {
             alt="Swami Vivekananda Logo" 
             style={{ 
               margin: "0 auto var(--sp-4) auto", 
-              width: "64px", 
-              height: "64px", 
+              width: "72px", 
+              height: "72px", 
               borderRadius: "50%", 
-              objectFit: "cover",
-              display: "block"
+              objectFit: "cover", 
+              display: "block",
+              border: "3px solid #fff",
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+              backgroundColor: "#fff"
             }}
           />
           <h2 className="font-playfair" style={{ fontSize: "1.75rem", color: "var(--color-secondary)", margin: "0 0 0.25rem 0" }}>

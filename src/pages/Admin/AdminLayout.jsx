@@ -58,7 +58,16 @@ const AdminLayout = () => {
             <img 
               src="/logo.png" 
               alt="Swami Vivekananda Logo" 
-              style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} 
+              style={{ 
+                width: "36px", 
+                height: "36px", 
+                borderRadius: "50%", 
+                objectFit: "cover", 
+                flexShrink: 0,
+                border: "1.5px solid #fff",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                backgroundColor: "#fff"
+              }} 
             />
             <div className="admin-sidebar-logo-text">
               <span className="navbar-logo-name">{SITE_INFO.shortName}</span>

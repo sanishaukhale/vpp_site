@@ -35,12 +35,12 @@ const Navbar = () => {
           <Link to="/" className="navbar-logo">
             <img 
               src="/logo.png" 
-              alt="Swami Vivekananda Logo" 
-              style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} 
+              alt="VPSES Goa Logo" 
+              className="navbar-logo-img"
             />
             <div className="navbar-logo-text">
               <span className="navbar-logo-name">{SITE_INFO.shortName}</span>
-              <span className="navbar-logo-tagline">Society</span>
+              <span className="navbar-logo-tagline">&ldquo;{SITE_INFO.tagline}&rdquo;</span>
             </div>
           </Link>
 
