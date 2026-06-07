@@ -809,9 +809,26 @@ input, textarea, select {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --navbar-height: 70px;
+  }
+  
   .navbar-links,
   .navbar-cta { display: none; }
   .navbar-hamburger { display: flex; }
+  
+  .navbar-logo-img {
+    width: 52px;
+    height: 52px;
+  }
+  
+  .navbar-logo-name {
+    font-size: 1.15rem;
+  }
+  
+  .navbar-logo-tagline {
+    display: none;
+  }
 }
 
 /* ============================================================
