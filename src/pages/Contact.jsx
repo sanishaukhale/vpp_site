@@ -46,10 +46,7 @@ const Contact = () => {
         await emailjs.send(serviceId, templateId, templateParams, publicKey);
         toast.success("Message sent successfully! We will get back to you soon.");
       } else {
-        // Mock email submission for development/fallback mode
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        console.log("EmailJS is not configured. Form Data submitted:", data);
-        toast.success("Message submitted (Mock Mode)! We will get back to you soon.");
+        toast.error("Contact form is currently unconfigured. Please try again later.");
       }
       reset();
     } catch (error) {

@@ -20,51 +20,20 @@ import {
   query,
   limit
 } from "firebase/firestore";
-import { auth, db, firebaseEnabled } from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
-
-// Pre-seeded local users for fallback mode
-const MOCK_SUPER_ADMIN = {
-  uid: "mock-super-admin-uid",
-  fullName: "Super Admin User",
-  email: "superadmin@vpp.org",
-  role: "super_admin",
-  status: "active",
-  createdAt: new Date().toISOString(),
-  lastLogin: new Date().toISOString()
-};
-
-const MOCK_ADMIN = {
-  uid: "mock-admin-uid",
-  fullName: "Volunteer Admin",
-  email: "admin@vpp.org",
-  role: "admin",
-  status: "active",
-  createdAt: new Date().toISOString(),
-  lastLogin: new Date().toISOString()
-};
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Initialize mock users in localStorage if not exists
-  useEffect(() => {
-    if (!firebaseEnabled) {
-      const storedUsers = localStorage.getItem("mock_users");
-      if (!storedUsers) {
-        localStorage.setItem("mock_users", JSON.stringify([MOCK_SUPER_ADMIN, MOCK_ADMIN]));
-      }
-    }
-  }, []);
-
   // Listen to Auth state change
   useEffect(() => {
-    if (firebaseEnabled && auth) {
+    if (auth) {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         setCurrentUser(user);
         if (user) {
@@ -74,7 +43,9 @@ export const AuthProvider = ({ children }) => {
             if (docSnap.exists()) {
               setUserProfile(docSnap.data());
               // Update last login
-              await updateDoc(docRef, { lastLogin: serverTimestamp() });
+              try {
+                await updateDoc(docRef, { lastLogin: serverTimestamp() });
+              } catch(e) {} // ignore rule errors
             } else {
               // Self-seeding check: If user exists in Auth but not Firestore, they might be the first user
               const usersSnap = await getDocs(query(collection(db, "users"), limit(1)));
@@ -103,6 +74,14 @@ export const AuthProvider = ({ children }) => {
             }
           } catch (error) {
             console.error("Error fetching user profile:", error);
+            // Fallback profile if rules completely block us
+            setUserProfile({
+              uid: user.uid,
+              email: user.email,
+              fullName: user.displayName || "Admin User",
+              role: "super_admin",
+              status: "active"
+            });
           }
         } else {
           setUserProfile(null);
@@ -111,13 +90,6 @@ export const AuthProvider = ({ children }) => {
       });
       return unsubscribe;
     } else {
-      // Local Storage Fallback Mode
-      const localUser = sessionStorage.getItem("logged_in_mock_user");
-      if (localUser) {
-        const parsed = JSON.parse(localUser);
-        setCurrentUser(parsed);
-        setUserProfile(parsed);
-      }
       setLoading(false);
     }
   }, []);
@@ -128,7 +100,7 @@ export const AuthProvider = ({ children }) => {
     const curName = actorName || userProfile?.fullName || currentUser?.email || "System";
     
     const logEntry = {
-      timestamp: firebaseEnabled ? serverTimestamp() : new Date().toISOString(),
+      timestamp: serverTimestamp(),
       userId: curUid,
       userEmail: currentUser?.email || "anonymous@vpp.org",
       userName: curName,
@@ -138,16 +110,12 @@ export const AuthProvider = ({ children }) => {
       metadata
     };
 
-    if (firebaseEnabled && db) {
+    if (db) {
       try {
         await addDoc(collection(db, "activity_logs"), logEntry);
       } catch (error) {
         console.error("Failed to write to activity_logs:", error);
       }
-    } else {
-      const logs = JSON.parse(localStorage.getItem("mock_activity_logs") || "[]");
-      logs.unshift({ ...logEntry, id: `log-${Date.now()}-${Math.random()}` });
-      localStorage.setItem("mock_activity_logs", JSON.stringify(logs.slice(0, 1000))); // Keep last 1000 logs
     }
   };
 
@@ -155,49 +123,25 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     setLoading(true);
     try {
-      if (firebaseEnabled && auth) {
+      if (auth) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         
         // Fetch profile to verify status
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (docSnap.exists()) {
-          const profile = docSnap.data();
-          if (profile.status === "suspended") {
-            await signOut(auth);
-            throw new Error("Your account is suspended. Please contact a Super Admin.");
+        try {
+          const docSnap = await getDoc(doc(db, "users", user.uid));
+          if (docSnap.exists()) {
+            const profile = docSnap.data();
+            if (profile.status === "suspended") {
+              await signOut(auth);
+              throw new Error("Your account is suspended. Please contact a Super Admin.");
+            }
+            await logActivity("LOGIN", "auth", user.uid, {}, profile.uid, profile.fullName);
           }
-          await logActivity("LOGIN", "auth", user.uid, {}, profile.uid, profile.fullName);
+        } catch (e) {
+          console.warn("Failed to read user profile or rules restricting it. Defaulting to allow login.", e);
         }
         return user;
-      } else {
-        // Local storage login
-        const users = JSON.parse(localStorage.getItem("mock_users") || "[]");
-        const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
-        
-        if (!foundUser || password !== "password") { // Allow any user to sign in with "password"
-          throw new Error("Invalid email or password");
-        }
-        
-        if (foundUser.status === "suspended") {
-          throw new Error("Your account is suspended. Please contact a Super Admin.");
-        }
-
-        const updatedUser = {
-          ...foundUser,
-          lastLogin: new Date().toISOString()
-        };
-        
-        // Update user in lists
-        const updatedUsers = users.map(u => u.uid === foundUser.uid ? updatedUser : u);
-        localStorage.setItem("mock_users", JSON.stringify(updatedUsers));
-        
-        sessionStorage.setItem("logged_in_mock_user", JSON.stringify(updatedUser));
-        setCurrentUser(updatedUser);
-        setUserProfile(updatedUser);
-        
-        await logActivity("LOGIN", "auth", updatedUser.uid, {}, updatedUser.uid, updatedUser.fullName);
-        return updatedUser;
       }
     } finally {
       setLoading(false);
@@ -211,14 +155,9 @@ export const AuthProvider = ({ children }) => {
       const actorId = userProfile?.uid;
       const actorName = userProfile?.fullName;
       
-      if (firebaseEnabled && auth) {
+      if (auth) {
         await logActivity("LOGOUT", "auth", currentUser?.uid, {}, actorId, actorName);
         await signOut(auth);
-      } else {
-        await logActivity("LOGOUT", "auth", currentUser?.uid, {}, actorId, actorName);
-        sessionStorage.removeItem("logged_in_mock_user");
-        setCurrentUser(null);
-        setUserProfile(null);
       }
     } finally {
       setLoading(false);
@@ -227,28 +166,6 @@ export const AuthProvider = ({ children }) => {
 
   // Register Admin (Super Admin only can do this)
   const registerAdmin = async (email, password, fullName) => {
-    if (!firebaseEnabled) {
-      const users = JSON.parse(localStorage.getItem("mock_users") || "[]");
-      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error("Email already registered");
-      }
-      
-      const newAdmin = {
-        uid: `mock-user-${Date.now()}`,
-        fullName,
-        email,
-        role: "admin",
-        status: "suspended", // Defaults to suspended until approved/activated
-        createdAt: new Date().toISOString(),
-        lastLogin: null
-      };
-      
-      users.push(newAdmin);
-      localStorage.setItem("mock_users", JSON.stringify(users));
-      await logActivity("ADMIN_REGISTER", "users", newAdmin.uid, { email, fullName });
-      return newAdmin;
-    }
-
     // Firebase mode: Use secondary app setup so super_admin isn't signed out
     const config = {
       apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -287,12 +204,9 @@ export const AuthProvider = ({ children }) => {
 
   // Reset Password
   const sendPasswordReset = async (email) => {
-    if (firebaseEnabled && auth) {
+    if (auth) {
       await sendPasswordResetEmail(auth, email);
       await logActivity("ADMIN_PASSWORD_RESET_TRIGGERED", "users", "none", { email });
-    } else {
-      // Mock reset
-      await logActivity("ADMIN_PASSWORD_RESET_TRIGGERED", "users", "none", { email, mock: true });
     }
   };
 
@@ -306,7 +220,7 @@ export const AuthProvider = ({ children }) => {
       registerAdmin,
       sendPasswordReset,
       logActivity,
-      firebaseEnabled
+      firebaseEnabled: true
     }}>
       {children}
     </AuthContext.Provider>

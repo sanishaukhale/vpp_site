@@ -12,10 +12,18 @@ import ActivityCard from "../components/ActivityCard";
 const Home = () => {
   const { activities } = useData();
 
+  // Helper to safely get date for sorting
+  const getDateObj = (act) => {
+    if (act.date) return new Date(act.date);
+    if (act.createdAt?.seconds) return new Date(act.createdAt.seconds * 1000);
+    if (typeof act.createdAt === 'string' || typeof act.createdAt === 'number') return new Date(act.createdAt);
+    return new Date();
+  };
+
   // Get 3 most recent approved/published activities
   const publishedActivities = activities
     .filter(act => act.status === "approved" && act.isPublished)
-    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+    .sort((a, b) => getDateObj(b) - getDateObj(a))
     .slice(0, 3);
 
   return (
